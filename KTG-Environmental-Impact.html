@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kata Group & Beyond Resorts - Carbon Footprint Dashboard</title>
+    
+    <!-- Load Tailwind CSS for minimalist styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Load Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Tailwind Configuration for precise minimalist colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                        },
+                        surface: '#ffffff',
+                        background: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Staggered animation delays for UI elements */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+
+        /* Minimalist Table Styling */
+        table { border-collapse: collapse; width: 100%; }
+        th { font-weight: 500; color: #64748b; text-align: left; padding: 1rem; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; color: #475569; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* Hide scrollbar for clean horizontal scrolling on mobile tables */
+        .table-container::-webkit-scrollbar { display: none; }
+        .table-container { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="fade-in">
+            <h1 class="text-3xl font-light text-slate-900 tracking-tight">Environmental Impact</h1>
+            <p class="text-slate-500 mt-1">Kata Group & Beyond Resorts • 2026 YTD Carbon Footprint</p>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in delay-100">
+            <!-- Card 1 -->
+            <div class="bg-surface rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">YTD Net Footprint</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-semibold text-slate-800">6,328.2</span>
+                    <span class="text-sm text-slate-500 font-medium">tCO₂e</span>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-surface rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                <span class="text-sm font-medium text-brand-600 uppercase tracking-wider">Total Reductions & Offsets</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-semibold text-brand-500">-727.5</span>
+                    <span class="text-sm text-slate-500 font-medium">tCO₂e</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">Via solar yields & waste management</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-surface rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Highest Emission Source</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-semibold text-slate-800">Scope 2</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">Indirect (Grid Electricity): 5,242.3 tCO₂e</p>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in delay-200">
+            
+            <!-- Line Chart (Trend) -->
+            <div class="bg-surface rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-medium text-slate-800">Monthly Net Footprint Trend</h2>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart (Breakdown) -->
+            <div class="bg-surface rounded-2xl p-6 shadow-sm border border-slate-100 lg:col-span-1">
+                <h2 class="text-lg font-medium text-slate-800 mb-6">YTD Emissions by Scope</h2>
+                <div class="relative h-64 w-full flex justify-center items-center">
+                    <canvas id="scopeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-slate-100 fade-in delay-300">
+            <h2 class="text-lg font-medium text-slate-800 mb-6">Detailed Monthly Record (tCO₂e)</h2>
+            <div class="table-container overflow-x-auto">
+                <table class="w-full text-sm whitespace-nowrap">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Scope 1 (Direct)</th>
+                            <th>Scope 2 (Indirect)</th>
+                            <th>Scope 3 (Value Chain)</th>
+                            <th>Gross Emissions</th>
+                            <th class="text-brand-600">Reductions</th>
+                            <th class="font-semibold text-slate-900">Net Footprint</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Table rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // 1. Data Model
+        const carbonData = [
+            { month: 'January', scope1: 150.5, scope2: 950.2, scope3: 205.1, gross: 1305.8, reductions: -120.4, net: 1185.4 },
+            { month: 'February', scope1: 142.3, scope2: 920.8, scope3: 190.6, gross: 1253.7, reductions: -132.5, net: 1121.2 },
+            { month: 'March', scope1: 148.0, scope2: 945.5, scope3: 198.3, gross: 1291.8, reductions: -145.0, net: 1146.8 },
+            { month: 'April', scope1: 135.2, scope2: 880.4, scope3: 175.9, gross: 1191.5, reductions: -140.2, net: 1051.3 },
+            { month: 'May', scope1: 105.8, scope2: 755.1, scope3: 125.4, gross: 986.3, reductions: -95.6, net: 890.7 },
+            { month: 'June', scope1: 98.4, scope2: 715.3, scope3: 115.2, gross: 928.9, reductions: -85.3, net: 843.6 },
+            { month: 'July (MTD)', scope1: 10.2, scope2: 75.0, scope3: 12.5, gross: 97.7, reductions: -8.5, net: 89.2 }
+        ];
+
+        // 2. Populate Table
+        const tableBody = document.getElementById('tableBody');
+        carbonData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition-colors duration-150";
+            tr.innerHTML = `
+                <td class="font-medium text-slate-800">${row.month}</td>
+                <td>${row.scope1.toFixed(1)}</td>
+                <td>${row.scope2.toFixed(1)}</td>
+                <td>${row.scope3.toFixed(1)}</td>
+                <td>${row.gross.toFixed(1)}</td>
+                <td class="text-brand-600">${row.reductions.toFixed(1)}</td>
+                <td class="font-semibold text-slate-900">${row.net.toFixed(1)}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        // 3. Chart Global Settings for Minimalism
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+        // 4. Trend Line Chart
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        
+        // Create gradient for the line chart fill
+        const gradient = ctxTrend.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(34, 197, 94, 0.2)'); // Brand green transparent
+        gradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
+
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: carbonData.map(d => d.month.replace(' (MTD)', '')),
+                datasets: [{
+                    label: 'Net Footprint (tCO₂e)',
+                    data: carbonData.map(d => d.net),
+                    borderColor: '#22c55e', // Brand Green
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#22c55e',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4 // Smooth curves
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f1f5f9',
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            padding: 10
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            padding: 10
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        });
+
+        // 5. Scope Breakdown Doughnut Chart
+        const ctxScope = document.getElementById('scopeChart').getContext('2d');
+        new Chart(ctxScope, {
+            type: 'doughnut',
+            data: {
+                labels: ['Scope 1 (Direct)', 'Scope 2 (Indirect)', 'Scope 3 (Value Chain)'],
+                datasets: [{
+                    data: [790.4, 5242.3, 1023.0], // YTD Totals
+                    backgroundColor: [
+                        '#94a3b8', // Slate 400
+                        '#334155', // Slate 700 (Highlight largest)
+                        '#cbd5e1'  // Slate 300
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%', // Thin sleek ring
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
